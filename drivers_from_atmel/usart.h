@@ -1,36 +1,4 @@
-/* This file has been prepared for Doxygen automatic documentation generation.*/
-/*! \file *********************************************************************
- *
- * \brief  XMEGA USART driver header file.
- *
- *      This file contains the function prototypes and enumerator definitions
- *      for various configuration parameters for the XMEGA USART driver.
- *
- *      The driver is not intended for size and/or speed critical code, since
- *      most functions are just a few lines of code, and the function call
- *      overhead would decrease code performance. The driver is intended for
- *      rapid prototyping and documentation purposes for getting started with
- *      the XMEGA ADC module.
- *
- *      For size and/or speed critical code, it is recommended to copy the
- *      function contents directly into your application instead of making
- *      a function call.
- *
- * \par Application note:
- *      AVR1307: Using the XMEGA USART
- *
- * \par Documentation
- *      For comprehensive code documentation, supported compilers, compiler
- *      settings and supported devices see readme.html
- *
- * \author
- *      Atmel Corporation: http://www.atmel.com \n
- *      Support email: avr@atmel.com
- *
- * $Revision: 1694 $
- * $Date: 2008-07-29 14:21:58 +0200 (ti, 29 jul 2008) $  \n
- *
- * Copyright (c) 2008, Atmel Corporation All rights reserved.
+ /* Copyright (c) 2008, Atmel Corporation All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,38 +23,10 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *****************************************************************************/
-#ifndef USART_DRIVER_H
-#define USART_DRIVER_H
-#include "avr_compiler.h"
-/* Scheduler include files. */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+ */
 
-typedef enum {
-	BAUD9600 = 1,
-	BAUD19200 = 2,
-} Baudrate_enum;
-
-#define DONT_BLOCK 0
-#define MAX_DELAY portMAX_DELAY
-
-/*! \brief Struct used when interrupt driven driver is used.
-*  Struct containing pointer to a usart, a buffer and a location to store Data
-*  register interrupt level temporary.
-*/
-typedef struct UsartStructDefenition
-{
-	/* \brief Pointer to USART module to use. */
-	USART_t * usart;
-	/* \brief Data register empty interrupt level. */
-	USART_DREINTLVL_t dreIntLevel;
-	/* \brief Data buffer. */
-	xQueueHandle xQueueRX;
-	xQueueHandle xQueueTX;
-	//USART_Buffer_t buffer;
-} USART_buffer_struct_t;
+#ifndef USART_H_
+#define USART_H_
 
 /* Macros. */
 /*! \brief Macro that sets the USART frame format.
@@ -180,15 +120,5 @@ typedef struct UsartStructDefenition
  *  \param _usart     The USART module.
  */
 #define USART_IsRXComplete(_usart) (((_usart)->STATUS & USART_RXCIF_bm) != 0)
-/* Functions for interrupt driven driver. */
-USART_buffer_struct_t USART_InterruptDriver_Initialize(USART_t * usart, Baudrate_enum baudrate ,char bufferSize);
 
-void USART_Buffer_PutByte(USART_buffer_struct_t * usart_buffer_t, uint8_t data, int ticksToWait );
-void USART_Buffer_PutString(USART_buffer_struct_t * usart_buffer_t, const char *string, int ticksToWait );
-void USART_Buffer_PutInt(USART_buffer_struct_t * usart_buffer_t, int16_t Int,int16_t radix, int ticksToWait );
-
-int8_t USART_Buffer_GetByte(USART_buffer_struct_t * usart_buffer_t, char * receivedChar, int ticksToWait );
-signed char USART_DataRegEmpty(USART_buffer_struct_t * usart_struct);
-signed char USART_RXComplete(USART_buffer_struct_t * usart_buffer_t);
-#endif
-
+#endif /* USART_H_ */
