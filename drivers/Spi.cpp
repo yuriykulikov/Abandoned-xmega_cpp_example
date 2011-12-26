@@ -148,6 +148,8 @@ SpiMaster::SpiMaster(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, bool clk2x, 
     port->OUTSET = SPI_SS_bm;
     // Set MISO input
     port->DIRCLR = SPI_MISO_bm;
+    // Enable pullup resistor on MISO line
+    PORT_ConfigurePins(port, SPI_MISO_bm, false, false, PORT_OPC_PULLUP_gc, PORT_ISC_BOTHEDGES_gc);
     //Create binary semaphore which will be used for synchronization between task and ISR
     //vSemaphoreCreateBinary(master->semaphore);
     // Create mutex which will be used to prevent using module by several tasks at the same time.
