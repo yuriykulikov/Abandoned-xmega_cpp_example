@@ -13,6 +13,7 @@
 #include "LedProcessorThread.h"
 #include "Serial.h"
 #include "Spi.h"
+#include "PinChangeController.h"
 
 extern "C" {
 #include "strings.h"
@@ -77,8 +78,16 @@ void ExampleHandler::handleMessage(Message msg) {
         led->post(0x30, 100);
         led->post(0x60, 100);
         led->post(0x40, 100);
-        serial->putPgmString(Strings_BlinkResp);
+        if (serial != NULL) {
+            serial->putPgmString(Strings_BlinkResp);
+        } else {
+            debugSerial->putPgmString(Strings_BlinkResp);
+        }
         break;
     }
 }
 
+bool ExampleHandler::onPinChange(PORT_t *port) {
+    // this will be executed from the interrupt
+    return this->sendMessageFromISR(EVENT_BLINK);
+}

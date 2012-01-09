@@ -51,6 +51,7 @@ extern "C" {
 #include "Spi.h"
 #include "Serial.h"
 #include "SpiSlaveThread.h"
+#include "PinChangeController.h"
 
 /** This is global, because used in hooks */
 LedGroup ledRGB = LedGroup(3);
@@ -136,6 +137,9 @@ int main( void ) {
     interpreter.registerCommand(Strings_SpiExampleCmd, Strings_SpiExampleCmdDesc, &exampleHandler, EVENT_RUN_SPI_TEST);
     interpreter.registerCommand(Strings_BlinkCmd, Strings_BlinkCmdDesc, &exampleHandler, EVENT_BLINK);
     CommandInterpreterThread cmdIntThreadFTDI = CommandInterpreterThread(&interpreter, 32, &usartFTDI, "I12", 128, configNORMAL_PRIORITY);
+
+    PinChangeController pinChangeController = PinChangeController();
+    pinChangeController.registerOnPinChangeListener(&exampleHandler, &PORTD, PIN2_bm, PORT_OPC_TOTEM_gc, PORT_ISC_RISING_gc);
 
     // ****** Start stand-alone tasks
     SpiSlaveThread spiSlaveThread = SpiSlaveThread(&spiSlave, &usartFTDI, "SLV", 128, configLOW_PRIORITY);
