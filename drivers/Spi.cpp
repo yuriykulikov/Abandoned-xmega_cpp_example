@@ -1,26 +1,22 @@
 /* This file has been prepared for Doxygen automatic documentation generation.*/
-/**@file *********************************************************************
+/*
+ * Copyright (C) 2012 Yuriy Kulikov
+ *      Universitaet Erlangen-Nuernberg
+ *      LS Informationstechnik (Kommunikationselektronik)
+ *      Support email: Yuriy.Kulikov.87@googlemail.com
  *
- * @brief  XMEGA SPI driver source file.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *      This file contains the source for the XMEGA SPI driver.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *      It is possible to have several devices on the same bus, using different
- *      SS pins.
- *
- *      Implementation relies on FreeRTOS and it is thread safe.
- *
- *		Bus contention prevention in master mode feature is not used.
- *
- *      Driver is not intended to be fast, especially in Slave mode. It
- *      concentrates the ease of understanding and use. Structures Slave and
- *      Master are not cast to void *, like it is done with xQueueHandle, for
- *      the reason to provide easier to understand code.
- *
- * @author
- *      Yuriy Kulikov yuriy.kulikov.87@gmail.com
- *
- *****************************************************************************/
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Scheduler include files.
 #include "FreeRTOS.h"

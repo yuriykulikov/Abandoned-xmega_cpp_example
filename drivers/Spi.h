@@ -1,25 +1,22 @@
 /* This file has been prepared for Doxygen automatic documentation generation.*/
-/**@file *********************************************************************
+/*
+ * Copyright (C) 2012 Yuriy Kulikov
+ *      Universitaet Erlangen-Nuernberg
+ *      LS Informationstechnik (Kommunikationselektronik)
+ *      Support email: Yuriy.Kulikov.87@googlemail.com
  *
- * @brief  XMEGA SPI driver header file.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *      This file contains the function prototypes and structure definitions
- *      for the XMEGA SPI driver.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *      It is possible to have several devices on the same bus, using different
- *      SS pins.
- *
- *      Implementation relies on FreeRTOS and it is thread safe.
- *
- *      Driver is not intended to be fast, especially in Slave mode. It
- *      concentrates the ease of understanding and use. Structures SpiSlave and
- *      SpiMaster are not cast to void *, like it is done with xQueueHandle, for
- *      the reason to provide easier to understand code.
- *
- * @author
- *      Yuriy Kulikov yuriy.kulikov.87@gmail.com
- *
- *****************************************************************************/
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef SPI_DRIVER_H
 #define SPI_DRIVER_H
 
@@ -37,10 +34,9 @@
 #define SPI_SCK_bm            0x80
 
 /**
- * @brief Structure, representing an SPI master.
+ * @brief Class, representing an SPI master.
  * It is used to pass data between Task and ISR.
- * There should be one global instance of this struct for each module.
- * @attention  Interact with this struct only using functions.
+ * There should be one global instance of this class for each module.
  */
 class SpiMaster {
 public:
@@ -65,7 +61,6 @@ public:
 /**
  * @brief Represents particular device on the bus
  * Holds pointer to the SPI master, and SS pin description. Initialize one for each device on SPI bus.
- * @attention  Interact with this struct only using functions.
  */
 class SpiDevice {
 public:
@@ -82,7 +77,6 @@ public:
 
 /**
  * @brief Represents the slave.
- * @attention  Interact with this struct only using functions.
  */
 class SpiSlave {
 public:

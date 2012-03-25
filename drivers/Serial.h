@@ -1,23 +1,23 @@
 /* This file has been prepared for Doxygen automatic documentation generation.*/
-/*! \file *********************************************************************
+/*
+ * Copyright (C) 2012 Yuriy Kulikov
+ *      Universitaet Erlangen-Nuernberg
+ *      LS Informationstechnik (Kommunikationselektronik)
+ *      Support email: Yuriy.Kulikov.87@googlemail.com
  *
- * \brief  XMEGA USART driver for FreeRTOS header file.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *      This file contains the function prototypes and enumerator definitions
- *      for various configuration parameters for the XMEGA USART driver.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *		Functions can be used with or without the kernel running. All operations are
- *		thread safe.
- *
- *      The driver is not intended for size and/or speed critical code, focusing
- *      on the ease of understanding and flexibility instead.
- *      This file is based on the driver provided by Atmel Corporation and drivers
- *      provided by FreeRTOS.org
- *
- * \author
- * Yuriy Kulikov
- *
- *****************************************************************************/
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef USART_DRIVER_H
 #define USART_DRIVER_H
 #include "avr_compiler.h"
