@@ -176,7 +176,7 @@ SpiDevice::SpiDevice(SpiMaster *master, PORT_t *ssPort, uint8_t ssPinMask){
     // Set SS pin output
     ssPort->DIRSET = ssPinMask;
     // Configure wired and pull-up
-    PORT_ConfigurePins(ssPort, ssPinMask,false,false,PORT_OPC_WIREDANDPULL_gc,PORT_ISC_BOTHEDGES_gc );
+    PORT_ConfigurePins(ssPort, ssPinMask,false,false,PORT_OPC_PULLUP_gc, PORT_ISC_BOTHEDGES_gc );
     // Set SS pin high
     ssPort->OUTSET = ssPinMask;
 }
