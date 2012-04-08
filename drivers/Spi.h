@@ -55,6 +55,14 @@ public:
 //	volatile uint8_t bytesTransceived;
 //	volatile uint8_t bytesToReceive;
 //	volatile uint8_t bytesReceived;
+    /**
+     * @brief initializes a SPI module as master
+     * @param module The SPI module
+     * @param lsbFirst Data order will be LSB first if this is set to a non-zero value
+     * @param mode SPI mode (Clock polarity and phase)
+     * @param clk2x SPI double speed mode
+     * @param clockDivision SPI clock pre-scaler division factor
+     */
     SpiMaster(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, bool clk2x, SPI_PRESCALER_t clockDivision);
 };
 
@@ -69,10 +77,66 @@ public:
     //SS pin description
     PORT_t *ssPort;
     uint8_t ssPinMask;
+    /**
+     * @brief Initialize device on the SPI bus controlled by master
+     * @attention if you use the pin other than the standard SS pin, make sure the standard SS pin is not an input!
+     * @param SpiMaster
+     * @param ssPort
+     * @param ssPinMask
+     */
     SpiDevice(SpiMaster *master, PORT_t *ssPort, uint8_t ssPinMask);
-    char startTransmission (int ticksToWait);
-    void stopTransmission ();
+    /**
+     * @brief Tries to obtain the mutex and pulls SS pin low
+     * @attention This is a blocking call, thread calling this may be suspended
+     * @param ticks To Wait to obtain the mutex
+     * @return true if access to the bus was granted (mutex obtained), false otherwise
+     */
+    char startTransmission(int ticksToWait);
+    /**
+     * @brief Set SS pin high and release the mutex
+     */
+    void stopTransmission();
+    /**
+     * @brief Tries to obtain the mutex
+     * Use this method in combination with releaseMutex(), selectSlave() and unselectSlave()
+     * to grant access to the bus for extended period of time. Used primarily for real-time
+     * bus communication with devices like RFID readers.
+     * @attention This is a blocking call, thread calling this may be suspended
+     * @param ticksToWait - to obtain the mutex
+     * @return true if access to the bus was granted (mutex obtained), false otherwise
+     */
+    bool obtainMutex(int ticksToWait);
+    /**
+     * @brief release the mutex
+     */
+    void releaseMutex();
+    /**
+     * @brief Pull SS pin low
+     */
+    void selectSlave();
+    /**
+     * @brief Set SS pin high
+     * @attention Make sure that you have successfully obtained mutex for SPI master
+     * if you have multiple devices on one bus!
+     */
+    void unselectSlave();
+    /**
+     * @brief Shifts data with the slave device.
+     * @param spiMaster
+     * @param data
+     * @return received value from slave
+     */
     uint8_t shiftByte(uint8_t data);
+    /**
+     * @brief Shifts done byte with the slave device.
+     * @param spiMaster
+     * @param data
+     * @param rxDataPtr pointer to where to put read data
+     */
+    void shiftByte(uint8_t txData, uint8_t *rxDataPtr);
+
+    void readByte(uint8_t *rxDataPtr);
+    void writeByte(uint8_t txData);
 };
 
 /**
@@ -85,6 +149,13 @@ public:
     /** Master out slave in commands queue */
     xQueueHandle commandsQueue;
     SpiSlave(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, uint8_t queueSize);
+    /**
+     * @brief Get single byte from the slave queue, which was put there when master performed write.
+     * @attention This is a blocking call, thread calling this may be suspended
+     * @param *receivedByte
+     * @param ticksToWait
+     * @return true if data was fetched from the queue, false otherwise (no data)
+     */
     char getByteFromQueue(uint8_t * receivedByte, int ticksToWait);
 };
 

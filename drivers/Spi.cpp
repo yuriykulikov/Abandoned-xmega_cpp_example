@@ -104,27 +104,11 @@ SpiSlave::SpiSlave(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, uint8_t queueS
     module->CTRL = SPI_ENABLE_bm | (lsbFirst ? SPI_DORD_bm : 0) | mode;
     module->INTCTRL = SPI_INTLVL_LO_gc;
 }
-/**
- * @brief Get single byte from the slave queue, which was put there when master performed write.
- * @param slave
- * @param receivedByte
- * @param ticksToWait
- * @return true if data was fetched from the queue, false otherwise
- */
+
 char SpiSlave::getByteFromQueue(uint8_t *receivedByte, int ticksToWait) {
     return xQueueReceive(commandsQueue, receivedByte, ticksToWait);
 }
-/**
- * @brief This function initializes a SPI module as master.
- * @param module The SPI module.
- * @param port The I/O port where the SPI module is connected.
- * @param lsbFirst Data order will be LSB first if this is set to a non-zero value.
- * @param mode SPI mode (Clock polarity and phase).
- * @param intLevel SPI interrupt level.
- * @param clk2x SPI double speed mode
- * @param clockDivision SPI clock pre-scaler division factor.
- * @return pointer to the SpiMaster struct, to be used to create SpiDevice structures
- */
+
 SpiMaster::SpiMaster(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, bool clk2x, SPI_PRESCALER_t clockDivision){
     // Store module pointer first
     this->module=module;
@@ -161,14 +145,6 @@ SpiMaster::SpiMaster(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, bool clk2x, 
     module->INTCTRL = SPI_INTLVL_OFF_gc;
 }
 
-/**
- * @brief Initialize device on the SPI bus controlled by master
- * @attention if you use the pin other than the standard SS pin, make sure the standard SS pin is not an input!
- * @param SpiMaster
- * @param ssPort
- * @param ssPinMask
- * @return pointer to the SpiDevice struct, to be used with functions prefixed by SpiMaster_
- */
 SpiDevice::SpiDevice(SpiMaster *master, PORT_t *ssPort, uint8_t ssPinMask){
     // Store spi structure to use for this device
     this->master = master;
@@ -183,12 +159,6 @@ SpiDevice::SpiDevice(SpiMaster *master, PORT_t *ssPort, uint8_t ssPinMask){
     ssPort->OUTSET = ssPinMask;
 }
 
-/**
- * @brief Tries to obtain the mutex and pulls SS pin low
- * @param device
- * @param ticks To Wait to obtain the mutex
- * @return true if access to the bus was granted (mutex obtained), false otherwise
- */
 char SpiDevice::startTransmission (int ticksToWait) {
     //Try to obtain mutex
     if (xSemaphoreTake(master->mutex, ticksToWait)==pdTRUE) {
@@ -199,10 +169,7 @@ char SpiDevice::startTransmission (int ticksToWait) {
     // Function could not obtain the mutex, so return false
     return pdFALSE;
 }
-/**
- * @brief Set SS pin high and release the mutex
- * @param device
- */
+
 void SpiDevice::stopTransmission () {
     // Pull SS high
     ssPort->OUTSET = ssPinMask;
@@ -210,13 +177,25 @@ void SpiDevice::stopTransmission () {
     xSemaphoreGive(master->mutex);
 }
 
-/**
- * @brief Shifts data with the slave device.
- * @attention Call SpiMaster_startTransmission() before and SpiMaster_stopTransmission() after
- * @param spiMaster
- * @param data
- * @return received value from slave
- */
+bool SpiDevice::obtainMutex(int ticksToWait) {
+    //Try to obtain mutex
+    return xSemaphoreTake(master->mutex, ticksToWait);
+}
+
+void SpiDevice::releaseMutex(){
+    xSemaphoreGive(master->mutex);
+}
+
+void SpiDevice::selectSlave(){
+    // Pull SS low
+    ssPort->OUTCLR=ssPinMask;
+}
+
+void SpiDevice::unselectSlave(){
+    // Pull SS high
+    ssPort->OUTSET = ssPinMask;
+}
+
 uint8_t SpiDevice::shiftByte(uint8_t data) {
     //Put byte to initialize data transmission
     master->module->DATA=data;
@@ -224,4 +203,21 @@ uint8_t SpiDevice::shiftByte(uint8_t data) {
     while(!(master->module->STATUS & SPI_IF_bm)) { nop(); }
     // Accessing the DATA register will clear the SPI_IF_bm
     return master->module->DATA;
+}
+
+void SpiDevice::shiftByte(uint8_t txData, uint8_t *rxDataPtr) {
+    //Put byte to initialize data transmission
+    master->module->DATA=txData;
+    //Wait until byte is shifted
+    while(!(master->module->STATUS & SPI_IF_bm)) { nop(); }
+    // Accessing the DATA register will clear the SPI_IF_bm
+    *rxDataPtr = master->module->DATA;
+}
+
+void SpiDevice::readByte(uint8_t *rxDataPtr) {
+    shiftByte(0x00, rxDataPtr);
+}
+
+void SpiDevice::writeByte(uint8_t txData) {
+    shiftByte(txData);
 }
