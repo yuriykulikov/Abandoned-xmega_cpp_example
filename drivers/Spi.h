@@ -74,6 +74,9 @@ class SpiDevice {
 public:
     /** Spi structure to use */
     SpiMaster *master;
+    //shortcut
+    register8_t *statusReg;  /* Status Register */
+    register8_t *dataReg;  /* Data Register */
     //SS pin description
     PORT_t *ssPort;
     uint8_t ssPinMask;

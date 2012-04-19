@@ -148,6 +148,9 @@ SpiMaster::SpiMaster(SPI_t *module, bool lsbFirst, SPI_MODE_t mode, bool clk2x, 
 SpiDevice::SpiDevice(SpiMaster *master, PORT_t *ssPort, uint8_t ssPinMask){
     // Store spi structure to use for this device
     this->master = master;
+    //save shortcuts to decrease relative addressing time
+    this->dataReg = &(master->module->DATA);
+    this->statusReg = &(master->module->STATUS);
     // Store SS configuration.
     this->ssPort = ssPort;
     this->ssPinMask = ssPinMask;
@@ -198,20 +201,20 @@ void SpiDevice::unselectSlave(){
 
 uint8_t SpiDevice::shiftByte(uint8_t data) {
     //Put byte to initialize data transmission
-    master->module->DATA=data;
+    *dataReg = data;
     //Wait until byte is shifted
-    while(!(master->module->STATUS & SPI_IF_bm)) { nop(); }
+    while(!(*statusReg & SPI_IF_bm)) { /*empty*/ }
     // Accessing the DATA register will clear the SPI_IF_bm
-    return master->module->DATA;
+    return *dataReg;
 }
 
 void SpiDevice::shiftByte(uint8_t txData, uint8_t *rxDataPtr) {
     //Put byte to initialize data transmission
-    master->module->DATA=txData;
+    *dataReg = txData;
     //Wait until byte is shifted
-    while(!(master->module->STATUS & SPI_IF_bm)) { nop(); }
+    while(!(*statusReg & SPI_IF_bm)) { /*empty*/ }
     // Accessing the DATA register will clear the SPI_IF_bm
-    *rxDataPtr = master->module->DATA;
+    *rxDataPtr = *dataReg;
 }
 
 void SpiDevice::readByte(uint8_t *rxDataPtr) {
