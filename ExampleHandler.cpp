@@ -25,7 +25,7 @@
 #include "Handler.h"
 #include "Leds.h"
 #include "LedProcessorThread.h"
-#include "Serial.h"
+#include "TxBuffer.h"
 #include "Spi.h"
 #include "PinChangeController.h"
 
@@ -33,57 +33,58 @@ extern "C" {
 #include "strings.h"
 }
 
-ExampleHandler::ExampleHandler(Looper *looper, SpiDevice *spiMaster, LedProcessorThread *led, Serial *debugSerial):Handler(looper){
+ExampleHandler::ExampleHandler(Looper *looper, SpiDevice *spiMaster, LedProcessorThread *led, TxBuffer *debugTx)
+        :Handler(looper){
     this->master = spiMaster;
     this->led = led;
-    this->debugSerial = debugSerial;
+    this->debugTx = debugTx;
 }
 
 void ExampleHandler::handleMessage(Message msg) {
 #ifdef DEBUG
-    debugSerial->putString("ExampleHandler.handleMessage(");
-    debugSerial->putInt(msg.what, 10);
-    debugSerial->putString(")\n");
+    debugTx->putString("ExampleHandler.handleMessage(");
+    debugTx->putInt(msg.what, 10);
+    debugTx->putString(")\n");
 #endif
-    Serial *serial;
+    TxBuffer *responseTx;
     switch (msg.what) {
     case EVENT_RUN_SPI_TEST:
-        serial = (Serial*)msg.ptr;
+        responseTx = (TxBuffer*)msg.ptr;
         char obtainedMutex;
         obtainedMutex = master->startTransmission(10);
         if (obtainedMutex) {
             //Transmit bytes
             uint8_t receivedChar = '#';
-            serial->putPgmString(Strings_SpiMasterExample1);
+            responseTx->putPgmString(Strings_SpiMasterExample1);
             receivedChar = master->shiftByte(0xC0);
-            serial->putInt(receivedChar, 16);
+            responseTx->putInt(receivedChar, 16);
             receivedChar = master->shiftByte(0x01);
-            serial->putInt(receivedChar, 16);
-            serial->putPgmString(Strings_newline);
+            responseTx->putInt(receivedChar, 16);
+            responseTx->putPgmString(Strings_newline);
             //Transmit more bytes
             vTaskDelay(1);
-            serial->putPgmString(Strings_SpiMasterExample2);
+            responseTx->putPgmString(Strings_SpiMasterExample2);
             receivedChar = master->shiftByte(0xC0);
-            serial->putInt(receivedChar, 16);
+            responseTx->putInt(receivedChar, 16);
             receivedChar = master->shiftByte(0xDE);
-            serial->putInt(receivedChar, 16);
-            serial->putPgmString(Strings_newline);
+            responseTx->putInt(receivedChar, 16);
+            responseTx->putPgmString(Strings_newline);
             //Transmit more bytes
             vTaskDelay(500);
-            serial->putPgmString(Strings_SpiMasterExample3);
+            responseTx->putPgmString(Strings_SpiMasterExample3);
             receivedChar = master->shiftByte(0xD0);
-            serial->putInt(receivedChar, 16);
+            responseTx->putInt(receivedChar, 16);
             receivedChar = master->shiftByte(0x00);
-            serial->putInt(receivedChar, 16);
+            responseTx->putInt(receivedChar, 16);
             receivedChar = master->shiftByte(0xDE);
-            serial->putInt(receivedChar, 16);
-            serial->putPgmString(Strings_newline);
+            responseTx->putInt(receivedChar, 16);
+            responseTx->putPgmString(Strings_newline);
             master->stopTransmission();
         }
         break;
 
     case EVENT_BLINK:
-        serial = (Serial*) msg.ptr;
+        responseTx = (TxBuffer*) msg.ptr;
         led->post(0x01, 100);
         led->post(0x03, 100);
         led->post(0x06, 100);
@@ -92,10 +93,10 @@ void ExampleHandler::handleMessage(Message msg) {
         led->post(0x30, 100);
         led->post(0x60, 100);
         led->post(0x40, 100);
-        if (serial != NULL) {
-            serial->putPgmString(Strings_BlinkResp);
+        if (responseTx != NULL) {
+            responseTx->putPgmString(Strings_BlinkResp);
         } else {
-            debugSerial->putPgmString(Strings_BlinkResp);
+            debugTx->putPgmString(Strings_BlinkResp);
         }
         break;
     }

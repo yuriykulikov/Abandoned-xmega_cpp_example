@@ -26,7 +26,7 @@
 
 #include "Handler.h"
 #include "LedProcessorThread.h"
-#include "Serial.h"
+#include "TxBuffer.h"
 #include "Spi.h"
 #include "PinChangeController.h"
 
@@ -39,9 +39,9 @@ private:
     /** Pointer to SpiSlave to use */
     SpiDevice *master;
     LedProcessorThread *led;
-    Serial *debugSerial;
+    TxBuffer *debugTx;
 public:
-    ExampleHandler(Looper *looper, SpiDevice *spiMaster, LedProcessorThread *led, Serial *debugUsart);
+    ExampleHandler(Looper *looper, SpiDevice *spiMaster, LedProcessorThread *led, TxBuffer *debugTx);
     void handleMessage(Message msg);
     bool onPinChange(PORT_t *port);
 };

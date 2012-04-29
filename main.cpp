@@ -128,7 +128,8 @@ int main( void ) {
     CommandInterpreter interpreter = CommandInterpreter();
     interpreter.registerCommand(Strings_SpiExampleCmd, Strings_SpiExampleCmdDesc, &exampleHandler, EVENT_RUN_SPI_TEST);
     interpreter.registerCommand(Strings_BlinkCmd, Strings_BlinkCmdDesc, &exampleHandler, EVENT_BLINK);
-    CommandInterpreterThread cmdIntThreadFTDI = CommandInterpreterThread(&interpreter, 32, &usartFTDI, "I12", 128, configNORMAL_PRIORITY);
+    CommandInterpreterThread cmdIntThreadFTDI = CommandInterpreterThread(&interpreter, 32, &usartFTDI,
+            &usartFTDI, "I12", 128, configNORMAL_PRIORITY);
 
     PinChangeController pinChangeController = PinChangeController();
     pinChangeController.registerOnPinChangeListener(&exampleHandler, &PORTD, PIN2_bm, PORT_OPC_TOTEM_gc, PORT_ISC_RISING_gc);
