@@ -26,6 +26,9 @@
 #include "task.h"
 #include "queue.h"
 
+#include "RxBuffer.h"
+#include "TxBuffer.h"
+
 typedef enum {
 	BAUD9600 = 1,
 	BAUD19200 = 2,
@@ -35,14 +38,12 @@ typedef enum {
 *  Struct containing pointer to a usart, a buffer and a location to store Data
 *  register interrupt level temporary.
 */
-class Serial {
+class Serial : public RxBuffer, public TxBuffer {
 private:
     /* \brief Pointer to USART module to use. */
     USART_t * module;
     /* \brief Data register empty interrupt level. */
     USART_DREINTLVL_t dreIntLevel;
-    /** Default ticksToWait value */
-    int ticksToWait;
     /* \brief Data buffer. */
     xQueueHandle RXqueue;
     xQueueHandle TXqueue;
@@ -50,12 +51,9 @@ public:
     signed char USART_RXComplete();
     signed char USART_DataRegEmpty();
     Serial(USART_t *module, Baudrate baudrate, uint8_t bufferSize, int ticksToWait);
-    int8_t putByte(uint8_t data);
-    int8_t putString(const char *string);
-    int8_t putPgmString(const char *progmem_s);
-    int8_t putInt(int16_t Int,int16_t radix);
-    int8_t getByte(char * receivedChar);
-    int8_t getByte(char * receivedChar, int ticks);
+    virtual int8_t putByte(uint8_t data);
+    virtual void flush();
+    virtual int8_t getByte(char * receivedChar, int ticks);
 };
 #endif
 

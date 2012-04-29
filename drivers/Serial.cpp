@@ -64,7 +64,8 @@ ISR(USARTE0_DRE_vect){usartE->USART_DataRegEmpty();}
  * @param ticksToWait - Default wait time
  * @return pointer to the Usart software module
  */
-Serial::Serial(USART_t *module, Baudrate baudrate, uint8_t bufferSize, int ticksToWait) {
+Serial::Serial(USART_t *module, Baudrate baudrate, uint8_t bufferSize, int ticksToWait)
+        :RxBuffer(ticksToWait), TxBuffer(ticksToWait) {
     PORT_t * port;
     //switch by pointer to usart structure, which will be used. Usually it is not a good idea to
     //switch by pointer, but in our case pointers are defined by hardware
@@ -97,8 +98,6 @@ Serial::Serial(USART_t *module, Baudrate baudrate, uint8_t bufferSize, int ticks
     this->module = module;
     /*Store DRE level so we will know which level to enable when we put data and want it to be sent. */
     this->dreIntLevel = USART_DREINTLVL_LO_gc;
-    // store default ticksToWait value - used in Dflt functions
-    this->ticksToWait = ticksToWait;
     /* @brief  Receive buffer size: 2,4,8,16,32,64,128 bytes. */
     RXqueue = xQueueCreate(bufferSize,sizeof(char));
     TXqueue = xQueueCreate(bufferSize,sizeof(char));
@@ -124,95 +123,19 @@ Serial::Serial(USART_t *module, Baudrate baudrate, uint8_t bufferSize, int ticks
     USART_Tx_Enable(module);
 }
 
-/** @brief Put data (5-8 bit character).
- *
- *  Stores data byte in TX software buffer and enables DRE interrupt if there
- *  is free space in the TX software buffer.
- * @param usart
- * @param data The data to send
- * @param ticksToWait Amount of RTOS ticks (1 ms default) to wait if there is space in queue
- * @return pdTRUE is success, pdFALSE if queue was full and ticksToWait elapsed
- */
 int8_t Serial::putByte(uint8_t data) {
-    uint8_t tempCTRLA;
-    signed char queueSendResult = xQueueSendToBack(TXqueue, &data, ticksToWait);
-    /* If we successfully loaded byte to queue */
-    if (queueSendResult == pdPASS) {
-        /* Enable DRE interrupt. */
-        tempCTRLA = module->CTRLA;
-        tempCTRLA = (tempCTRLA & ~USART_DREINTLVL_gm) | dreIntLevel;
-        module->CTRLA = tempCTRLA;
-        return pdPASS;
-    } else {
-        return pdFAIL;
-    }
+    return xQueueSendToBack(TXqueue, &data, txTicksToWait);
 }
 
-/** @brief Get received data
- *
- *  Returns pdTRUE is data is available and puts byte into &receivedChar variable
- *
- *  @param usart_struct       The USART_struct_t struct instance.
- *	@param receivedChar       Pointer to char variable for to save result.
- *	@param xTicksToWait       Amount of RTOS ticks (1 ms default) to wait if there is data in queue.
- *  @return					  Success.
- */
+void Serial::flush() {
+    /* Enable DRE interrupt. */
+    uint8_t tempCTRLA = module->CTRLA;
+    tempCTRLA = (tempCTRLA & ~USART_DREINTLVL_gm) | dreIntLevel;
+    module->CTRLA = tempCTRLA;
+}
+
 int8_t Serial::getByte(char * receivedChar, int ticks) {
     return xQueueReceive(RXqueue, receivedChar, ticks);
-}
-int8_t Serial::getByte(char * receivedChar) {
-    return xQueueReceive(RXqueue, receivedChar, ticksToWait);
-}
-/** @brief Send string via Usart
- *
- *  Stores data string in TX software buffer and enables DRE interrupt if there
- *  is free space in the TX software buffer.
- *
- *  @param usart_struct The USART_struct_t struct instance.
- *  @param string       The string to send.
- *  @param xTicksToWait       Amount of RTOS ticks (1 ms default) to wait if there is space in queue.
- */
-int8_t Serial::putString(const char *string)
-{
-    //send the whole string. Note that if buffer is full, USART_TXBuffer_PutByte will do nothing
-    while (*string) {
-        int8_t putByteResult = putByte(*string++);
-        if (putByteResult == pdFAIL) return pdFAIL;
-    }
-    return pdPASS;
-}
-/** @brief Send program memory string via Usart
- *
- *  Stores data string in TX software buffer and enables DRE interrupt if there
- *  is free space in the TX software buffer.
- *  String is taken from the program memory.
- *
- *  @param usart_struct The USART_struct_t struct instance.
- *  @param string       The string to send.
- *  @param xTicksToWait       Amount of RTOS ticks (1 ms default) to wait if there is space in queue.
- */
-int8_t Serial::putPgmString(const char *progmem_s)
-{
-    register char c;
-    while ( (c = pgm_read_byte(progmem_s++)) ) {
-        int8_t putByteResult =  putByte(c);
-        if (putByteResult == pdFAIL) return pdFAIL;
-    }
-    return pdPASS;
-}
-/** @brief Put data (5-8 bit character).
- *
- *  Stores data integer represented as string in TX software buffer and enables DRE interrupt if there
- *  is free space in the TX software buffer.
- *
- *  @param usart Usart software abstraction structure
- *  @param Int       The integer to send.
- *  @param radix	Integer basis - 10 for decimal, 16 for hex
- *  @param xTicksToWait
- */
-int8_t Serial::putInt(int16_t Int,int16_t radix) {
-    char str[10];
-    return putString(itoa(Int,str,radix));
 }
 
 /**
